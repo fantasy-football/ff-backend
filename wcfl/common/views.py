@@ -1,21 +1,66 @@
 from django.http import JsonResponse
-from urllib import request as rq
+from django.views.decorators.csrf import csrf_exempt
 
+from .models import User
+from .decorators import set_cookies
+
+import requests
+import json
+
+
+@csrf_exempt
 def sign_in(request):
     if request.method == "POST":
-        
-        if 'access_token in request.POST:
-            acess_token = request.POST['access_token']
+
+        data = json.loads(request.body.decode('utf-8'))
+
+        if 'access_token' in data:
+            access_token = data['access_token']
         else:
-            return JsonResponse({'Error': 'User not logged in'}, status=404)
-        
+            return JsonResponse({'Error': 'User not authorized'},
+                                status=401)
+
         try:
-	    headers = { 'Authorization' : 'Bearer %s'%access_token }
-	    req = rq.Request('https://wcfl.auth0.com/userinfo', headers=headers)
-            data = json.loads(rq.urlopen(req).read().decode("utf-8"))
+            headers = {'Authorization': 'Bearer % s' % access_token}
+            r = requests.get('https://wcfl.auth0.com/userinfo',
+                             headers=headers)
+
+            userinfo = r.json()
+            userinfo['sub'] = userinfo['sub'].split('|')[1]
+
+            if not User.objects.filter(id=userinfo['sub']).exists():
+                obj = User.objects.create(id=userinfo['sub'],
+                                          name=userinfo['name'],
+                                          profile_picture=userinfo['picture'],
+                                          email=userinfo['email'])
+            else:
+                obj = User.objects.get(id=userinfo['sub'])
+
+            request.session['user'] = obj.id
+            request.session['logged_in'] = True
+
+            return JsonResponse({'success': True})
 
         except Exception as e:
-            return JsonResponse({'Error': Failed to retrieve user info'}, status=404)
+            print('Unable to fetch userinfo', e)
+            return JsonResponse({'Error': 'Authorization failed'},
+                                status=500)
 
-        if not User.objects.filter(user_id=data['sub']).exists():
+    else:
+        return JsonResponse({'Error': 'Method not allowed'}, status=405)
 
+
+@set_cookies
+def set_token(request):
+    if request.method == "GET":
+        return JsonResponse({'Success': True})
+    else:
+        return JsonResponse({'Error': 'Invalid Request'}, status=405)
+
+
+def sign_out(request):
+    if request.method == "GET":
+        request.session.flush()
+        return JsonResponse({'Success': True})
+    else:
+        return JsonResponse({'Error': 'Invalid Request'}, status=405)
