@@ -25,7 +25,7 @@ SECRET_KEY = '7tkg!r(+g_7!fi$*$q9au3o0puu&zuym8$*c0=t=**mw2^1+34'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -41,9 +41,12 @@ INSTALLED_APPS = [
     'common',
     'api',
 
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -126,3 +129,46 @@ STATIC_URL = '/static/'
 # Media files
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# Session settings
+
+SESSION_ENGINE = 'redis_sessions.session'
+
+SESSION_REDIS = {
+    'host': None,
+    'unix_domain_socket_path': '/var/run/redis/redis.sock',
+    'db': 0,
+    'prefix': 'session',
+    'socket_timeout': 10
+}
+
+# CORS settings
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ORIGIN_WHITELIST = (
+        'localhost:4200',
+        )
+
+CORS_ALLOW_METHODS = (
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+)
+
+CORS_ALLOW_HEADERS = (
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+)
