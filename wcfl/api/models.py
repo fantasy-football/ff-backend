@@ -70,7 +70,7 @@ class Player(models.Model):
         return '<{0}: {1} ({2})>'.format(self.id, self.name, self.team.name)
 
     class Meta:
-        ordering = ['-points', 'position']
+        ordering = ['-points', 'id', 'team', 'position']
         verbose_name_plural = 'Players'
 
 
@@ -114,9 +114,9 @@ class Fixture(models.Model):
     completed = models.BooleanField(default=False)
 
     def __str__(self):
-        return '<{0}: {1} {2}-{3}  {4}>'.format(self.id,
-                                                self.team1, self.score1,
-                                                self.team2, self.score2)
+        return '<{0}: {1} {2}-{4} {3}>'.format(self.gametime,
+                                                self.team1.name, self.score1,
+                                                self.team2.name, self.score2)
 
     class Meta:
         verbose_name_plural = 'Fixtures'
