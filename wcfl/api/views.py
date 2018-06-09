@@ -14,7 +14,7 @@ def players_list(request):
                              'value': player.value,
                              'points': player.points,
                              'trigram': player.team.trigram,
-                             'teamId': player.team.teamId
+                             'teamId': player.team.id
                              })
 
             return JsonResponse({'data': data})
