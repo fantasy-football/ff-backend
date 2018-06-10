@@ -64,7 +64,7 @@ class Player(models.Model):
     position = models.CharField(max_length=3, choices=POSITION_CHOICES)
     team = models.ForeignKey('Team', on_delete=models.CASCADE)
     points = models.SmallIntegerField(default=0)
-    value = models.SmallIntegerField(null=False)
+    value = models.FloatField(null=False)
 
     def __str__(self):
         return '<{0}: {1} ({2})>'.format(self.id, self.name, self.team.name)
