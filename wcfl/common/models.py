@@ -8,7 +8,7 @@ class User(models.Model):
     email = models.EmailField(null=False, blank=False)
     squad_created = models.BooleanField(default=False)
     score = models.SmallIntegerField(default=0)
-    balance = models.SmallIntegerField(default=100)
+    balance = models.FloatField(default=100)
     current_round = models.SmallIntegerField(default=0)
 
     def __str__(self):
