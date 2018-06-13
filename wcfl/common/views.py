@@ -7,7 +7,7 @@ from .decorators import set_cookies
 import requests
 import json
 
-@set_cookies
+@csrf_exempt
 def sign_in(request):
     if request.method == "POST":
 

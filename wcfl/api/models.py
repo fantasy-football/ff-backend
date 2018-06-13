@@ -168,15 +168,26 @@ class Squad(models.Model):
         
         data = []
         
-        data.append({'name': self.captain.name, 'position': self.captain.position,
-                     'points': 3*self.captain.points, 'isCaptain': True,
-                     'trigram': self.captain.team.trigram
-                     })
+        vcInSub = False
+        capSub = False
         
-        data.append({'name': self.vice_captain.name, 'position': self.vice_captain.position,
-                     'points': 2*self.vice_captain.points, 'isVC': True,
-                     'trigram': self.vice_captain.team.trigram
-                     })
+        for player in self.substitutes.all():
+            if player.name == self.captain.name:
+                capSub = True
+            if player.name == self.vice_captain.name:
+                vcInSub = True
+                
+        if capSub == False:
+            data.append({'name': self.captain.name, 'position': self.captain.position,
+                         'points': 3*self.captain.points, 'isCaptain': True,
+                         'trigram': self.captain.team.trigram
+                        })
+        
+        if vcInSub == False:
+            data.append({'name': self.vice_captain.name, 'position': self.vice_captain.position,
+                         'points': 2*self.vice_captain.points, 'isVC': True,
+                         'trigram': self.vice_captain.team.trigram
+                        })
 
 
         for index, player in enumerate(self.starting.all()):
@@ -189,12 +200,29 @@ class Squad(models.Model):
         
 
         for index, player in enumerate(self.substitutes.all()):
-            data.append({'name': player.name, 
-                         'position': player.position,
-                         'points': player.points//2,
-                         'trigram': player.team.trigram,
-                         'isSub': True
-                         })
+            if player.name == self.captain.name:
+                data.append({'name': player.name, 
+                             'position': player.position,
+                             'points': (3*player.points)//2,
+                             'trigram': player.team.trigram,
+                             'isSub': True
+                            })
+
+            elif player.name == self.vice_captain.name: 
+                data.append({'name': player.name, 
+                             'position': player.position,
+                             'points': (player.points)//2,
+                             'trigram': player.team.trigram,
+                             'isSub': True
+                            })
+            
+            else:
+                data.append({'name': player.name, 
+                             'position': player.position,
+                             'points': (player.points)//2,
+                             'trigram': player.team.trigram,
+                             'isSub': True
+                            })        
         
         return data
 

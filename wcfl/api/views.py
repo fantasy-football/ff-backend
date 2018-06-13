@@ -97,6 +97,7 @@ def submit_squad(request):
         return JsonResponse({'Error': 'Invalid request'}, status=405)
 
 
+
 def get_lineup(request):
     
     if request.method == 'GET':
