@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Team, Player, Squad, SquadLimit, Fixture, LineUp
+from .models import Team, Player, Squad, SquadLimit, Fixture, LineUp, Squad
 
 admin.site.register(Team)
 admin.site.register(Player)
