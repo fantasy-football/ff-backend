@@ -5,6 +5,8 @@ from django.core.files.temp import NamedTemporaryFile
 
 import requests
 
+from common.models import User
+
 
 class Team(models.Model):
     id = models.SmallIntegerField(primary_key=True)
@@ -52,7 +54,7 @@ class Player(models.Model):
     GOALKEEPER = 'GK'
     DEFENDER = 'DEF'
     MIDFIELDER = 'MID'
-    FORWARD = 'FW'
+    FORWARD = 'FWD'
 
     POSITION_CHOICES = (
             (GOALKEEPER, 'Goalkeeper'),
@@ -89,11 +91,16 @@ class SquadLimit(models.Model):
 class Squad(models.Model):
     user = models.OneToOneField('common.User', on_delete=models.CASCADE,
                                 primary_key=True)
-    players = models.ManyToManyField('Player')
+    
+    starting = models.ManyToManyField('Player')
+    
     captain = models.ForeignKey('Player', on_delete=models.CASCADE,
                                 related_name='captain')
+    
     vice_captain = models.ForeignKey('Player', on_delete=models.CASCADE,
                                      related_name='vice_captain')
+    
+    substitutes = models.ManyToManyField('Player', related_name='substitute')
 
     def __str__(self):
         return '<{0}: {1}>'.format(self.user.id, self.user.name)
@@ -101,16 +108,112 @@ class Squad(models.Model):
     class Meta:
         verbose_name_plural = 'Squads'
 
+    @classmethod
+    def create(cls, user_id, starting_list, substitutes, captain_id, vice_captain_id):
+        try:
+            user = User.objects.get(id = user_id)
+        
+            try:
+                captain = Player.objects.get(id = captain_id)
+                vice_captain = Player.objects.get(id = vice_captain_id)
+
+            except Exception as e:
+                print(" Invalid captain/vc")
+
+            x = cls(user = user,
+                captain = captain,
+                vice_captain = vice_captain)
+
+            x.save()
+            
+            try:
+                for player_id in starting_list:
+                    player = Player.objects.get(id = player_id)
+                    x.starting.add(player)
+
+                for player_id in substitutes:
+                    substitute = Player.objects.get(id = player_id)
+                    x.substitutes.add(substitute)
+
+                x.save()
+
+            except Exception as e:
+                print("Could not add squad")
+                x.delete()
+            
+            user.squad_created = True
+            user.save()
+
+            return x
+
+        except Exception as e:
+            print("User not authorized, invalid request")
+        
+    
+    def compute_score(self):
+        net_points = 0
+        
+        net_points += 3 * (self.captain.points) + 2 * (self.vice_captain.points)
+
+        for player in self.starting.all():
+            net_points += player.points
+        
+        for player in self.substitutes.all():
+            net_points += player.points//2
+
+        return net_points
+
+    
+    def get_data(self):
+        
+        data = []
+        
+        data.append({'name': self.captain.name, 'position': self.captain.position,
+                     'points': 3*self.captain.points, 'isCaptain': True,
+                     'trigram': self.captain.team.trigram
+                     })
+        
+        data.append({'name': self.vice_captain.name, 'position': self.vice_captain.position,
+                     'points': 2*self.vice_captain.points, 'isVC': True,
+                     'trigram': self.vice_captain.team.trigram
+                     })
+
+
+        for index, player in enumerate(self.starting.all()):
+            data.append({'name': player.name, 
+                         'position': player.position,
+                         'points': player.points,
+                         'trigram': player.team.trigram
+                         })
+       
+        
+
+        for index, player in enumerate(self.substitutes.all()):
+            data.append({'name': player.name, 
+                         'position': player.position,
+                         'points': player.points//2,
+                         'trigram': player.team.trigram,
+                         'isSub': True
+                         })
+        
+        return data
+
 
 class Fixture(models.Model):
+    
     id = models.AutoField(primary_key=True)
+    
     team1 = models.ForeignKey('Team', on_delete=models.CASCADE,
                               related_name='team1')
+    
     team2 = models.ForeignKey('Team', on_delete=models.CASCADE,
                               related_name='team2')
+    
     score1 = models.SmallIntegerField(default=0)
     score2 = models.SmallIntegerField(default=0)
+    
     gametime = models.DateTimeField('Game Played')
+    
     completed = models.BooleanField(default=False)
 
     def __str__(self):
@@ -124,8 +227,10 @@ class Fixture(models.Model):
 
 
 class LineUp(models.Model):
+    
     fixture = models.OneToOneField('Fixture', primary_key=True,
                                    on_delete=models.CASCADE)
+    
     players = models.ManyToManyField('Player')
 
     def __str__(self):
