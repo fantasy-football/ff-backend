@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '7tkg!r(+g_7!fi$*$q9au3o0puu&zuym8$*c0=t=**mw2^1+34'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -82,10 +82,12 @@ WSGI_APPLICATION = 'wcfl.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
+    	'ENGINE': 'django.db.backends.mysql',
+        'OPTIONS': {
+            'read_default_file': os.path.join(BASE_DIR, 'db.cnf'),
+        	},	
+	  }
+   }
 
 
 # Password validation
@@ -125,6 +127,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = '/var/www/wcfl/static'
+
+STATICFILES_DIRS = [
+'/home/sivasama/wcfl-backend/env/lib/python3.5/site-packages/django/contrib/admin/static/admin/',
+]
 
 # Media files
 
@@ -147,10 +154,6 @@ SESSION_REDIS = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_ORIGIN_WHITELIST = (
-        'localhost:4200',
-        )
 
 CORS_ALLOW_METHODS = (
     'DELETE',
