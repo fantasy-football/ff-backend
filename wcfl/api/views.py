@@ -60,6 +60,7 @@ def fixtures_list(request):
         return JsonResponse({'Error': 'Invalid request'}, status=405)
 
 
+@csrf_exempt
 def submit_squad(request):
     if request.method == 'POST':
         
