@@ -75,6 +75,13 @@ class Player(models.Model):
         ordering = ['-points', 'id', 'team', 'position']
         verbose_name_plural = 'Players'
 
+    
+    @classmethod
+    def reset_points(cls, player_id):
+        player = cls.objects.get(id=player_id)
+        player.points = 0
+        player.save()
+
 
 class SquadLimit(models.Model):
     round = models.SmallIntegerField(default=0)
@@ -153,13 +160,33 @@ class Squad(models.Model):
     def compute_score(self):
         net_points = 0
         
-        net_points += 3 * (self.captain.points) + 2 * (self.vice_captain.points)
+        vcInSub = False
+        capSub = False
+        
+        for player in self.substitutes.all():
+            if player.name == self.captain.name:
+                capSub = True
+            if player.name == self.vice_captain.name:
+                vcInSub = True
+         
+        if capSub == False:
+            net_points += 3 * (self.captain.points)  
+	
+        if vcInSub == False:
+            net_points += 2 * (self.vice_captain.points)
 
         for player in self.starting.all():
             net_points += player.points
         
         for player in self.substitutes.all():
-            net_points += player.points//2
+            if player.name == self.captain.name:
+                net_points += (3*player.points)//2
+            
+            elif player.name == self.vice_captain.name:
+                net_points += player.points
+
+            else:
+                net_points += player.points//2
 
         return net_points
 
@@ -180,13 +207,15 @@ class Squad(models.Model):
         if capSub == False:
             data.append({'name': self.captain.name, 'position': self.captain.position,
                          'points': 3*self.captain.points, 'isCaptain': True,
-                         'trigram': self.captain.team.trigram
+                         'trigram': self.captain.team.trigram,
+			 'isSub': False
                         })
         
         if vcInSub == False:
             data.append({'name': self.vice_captain.name, 'position': self.vice_captain.position,
                          'points': 2*self.vice_captain.points, 'isVC': True,
-                         'trigram': self.vice_captain.team.trigram
+                         'trigram': self.vice_captain.team.trigram,
+			 'isSub': False
                         })
 
 
@@ -194,7 +223,8 @@ class Squad(models.Model):
             data.append({'name': player.name, 
                          'position': player.position,
                          'points': player.points,
-                         'trigram': player.team.trigram
+                         'trigram': player.team.trigram,
+			 'isSub': False
                          })
        
         
@@ -213,6 +243,79 @@ class Squad(models.Model):
                              'position': player.position,
                              'points': (player.points)//2,
                              'trigram': player.team.trigram,
+                             'isSub': True
+                            })
+            
+            else:
+                data.append({'name': player.name, 
+                             'position': player.position,
+                             'points': (player.points)//2,
+                             'trigram': player.team.trigram,
+                             'isSub': True
+                            })        
+        
+        return data
+
+
+
+    def transfer_data(self):
+        
+        data = []
+        
+        vcInSub = False
+        capSub = False
+        
+        for player in self.substitutes.all():
+            if player.name == self.captain.name:
+                capSub = True
+            if player.name == self.vice_captain.name:
+                vcInSub = True
+                
+        if capSub == False:
+            data.append({'name': self.captain.name, 'position': self.captain.position,
+                         'points': 3*self.captain.points, 'isCaptain': True,
+                         'trigram': self.captain.team.trigram, 'value': self.captain.value,
+			 'isSub': False, 'id': self.captain.id
+                        })
+        
+        if vcInSub == False:
+            data.append({'name': self.vice_captain.name, 'position': self.vice_captain.position,
+                         'points': 2*self.vice_captain.points, 'isVC': True,
+                         'trigram': self.vice_captain.team.trigram,
+			 'isSub': False, 'id': self.vice_captain.id
+                        })
+
+
+        for index, player in enumerate(self.starting.all()):
+            data.append({'name': player.name, 
+                         'position': player.position,
+                         'points': player.points,
+                         'trigram': player.team.trigram,
+			 'isSub': False,
+			 'id': self.player.id,
+			 'value': self.player.value, 
+                         })
+       
+        
+
+        for index, player in enumerate(self.substitutes.all()):
+            if player.name == self.captain.name:
+                data.append({'name': player.name, 
+                             'position': player.position,
+                             'points': (3*player.points)//2,
+                             'trigram': player.team.trigram,
+			     'value': self.player.value,
+			     'id': self.player.id,
+                             'isSub': True
+                            })
+
+            elif player.name == self.vice_captain.name: 
+                data.append({'name': player.name, 
+                             'position': player.position,
+                             'points': (player.points)//2,
+                             'trigram': player.team.trigram,
+			     'value': self.player.value,
+			     'id': self.player.id,
                              'isSub': True
                             })
             
@@ -267,3 +370,98 @@ class LineUp(models.Model):
 
     class Meta:
         verbose_name_plural = 'LineUps'
+
+
+class Transfer(models.Model):
+    user = models.OneToOneField('common.User', on_delete=models.CASCADE,
+                                primary_key=True)
+    
+    starting = models.ManyToManyField('Player')
+    
+    captain = models.ForeignKey('Player', on_delete=models.CASCADE,
+                                related_name='transferCap')
+    
+    vice_captain = models.ForeignKey('Player', on_delete=models.CASCADE,
+                                     related_name='transferVC')
+    
+    substitutes = models.ManyToManyField('Player', related_name='transferSubs')
+
+    
+    def __str__(self):
+        return '<{0}: {1}>'.format(self.user.id, self.user.name)
+
+    
+    class Meta:
+        verbose_name_plural = 'Transfers'
+
+    
+    @classmethod
+    def create(cls, user_id, starting_list, substitutes, captain_id, vice_captain_id):
+        try:
+            user = User.objects.get(id = user_id)
+        
+            try:
+                captain = Player.objects.get(id = captain_id)
+                vice_captain = Player.objects.get(id = vice_captain_id)
+
+            except Exception as e:
+                print(" Invalid captain/vc")
+
+            x = cls(user = user,
+                captain = captain,
+                vice_captain = vice_captain)
+
+            x.save()
+            
+            try:
+                for player_id in starting_list:
+                    player = Player.objects.get(id = player_id)
+                    x.starting.add(player)
+
+                for player_id in substitutes:
+                    substitute = Player.objects.get(id = player_id)
+                    x.substitutes.add(substitute)
+
+                x.save()
+
+            except Exception as e:
+                print("Could not add squad")
+                x.delete()
+            
+            user.squad_created = True
+            user.save()
+
+            return x
+
+        except Exception as e:
+            print("User not authorized, invalid request")
+        
+
+class PlayerStat(models.Model):
+    player = models.OneToOneField('Player', on_delete=models.CASCADE,
+			       primary_key=True)
+    goals = models.SmallIntegerField(default=0)
+    assists = models.SmallIntegerField(default=0)
+    yellow_cards = models.SmallIntegerField(default=0)
+    red_cards = models.SmallIntegerField(default=0)
+    total_points = models.SmallIntegerField(default=0)
+
+    def __str__(self):
+        return '<{0}: {1} {2}>'.format(self.player.id, self.player.name, self.total_points)
+
+    class Meta:
+        verbose_name_plural = 'PlayerStats'
+        ordering = ['-total_points', 'goals']
+    
+
+    @classmethod
+    def create(cls, player, player_points):
+        x = cls(player=player,
+                total_points = player_points)
+        x.save()
+       
+    @classmethod
+    def update(cls, player, player_points):
+        x = cls.objects.get(player=player)
+        x.total_points += player_points
+        x.save()   
