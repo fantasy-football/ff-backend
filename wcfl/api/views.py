@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Player, Fixture, Squad
+from .models import Player, Fixture, Squad, Transfer
 from common.models import User
 
 import json
@@ -120,3 +120,42 @@ def get_lineup(request):
 
     else:
         return JsonResponse({'Error': 'Invalid request'}, status=405)
+
+
+@csrf_exempt
+def submit_transfer(request):
+    if request.method == 'POST':
+        
+        try:
+            user_id = request.session.get('user')
+            user = User.objects.get(id = user_id)
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({'Error': 'User not logged in'}, status=403)
+
+        data = json.loads(request.body.decode('utf-8'))
+         
+        starting_list = []
+        substitute_list = []
+        
+        squad = []
+
+        captain_id = data['captain']['id']
+        vc_id = data['vc']['id']
+
+        for player in data['squad']:
+            squad.append(player['id'])
+
+        for substitute in data['subs']:
+            substitute_list.append(substitute['id'])
+            
+        starting_list = list(set(squad)-(set(substitute_list).union(set([captain_id, vc_id]))))
+
+        sq = Transfer.create(user_id, starting_list, substitute_list, captain_id, vc_id)
+
+        return JsonResponse({'Succes': True})
+    else:
+        return JsonResponse({'Error': 'Invalid request'}, status=405)
+
+
