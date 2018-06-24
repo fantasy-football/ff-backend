@@ -15,5 +15,33 @@ class User(models.Model):
         return "<ID {} {}>".format(self.id, self.name)
 
     class Meta:
-        ordering = ["-score"]
-        verbose_name_plural = "Users"
+        ordering = ['-score']
+        verbose_name_plural = 'Users'
+
+
+class UserStat(models.Model):
+    user = models.OneToOneField('User', on_delete=models.CASCADE,
+	                        primary_key=True)
+    total_score = models.SmallIntegerField(default = 0)
+
+    def __str__(self):
+        return '<{0}: {1}, {2}>'.format(self.user.id, self.user.name, self.total_score)
+
+    class Meta:
+        ordering = ['-total_score']
+        verbose_name_plural = 'UserStats'
+
+     
+    @classmethod
+    def create(cls, user, round_score):
+        x = cls(user=user,
+                total_score=round_score 
+                )
+        x.save()
+
+    @classmethod
+    def update(cls, user, round_score):
+        x = cls.objects.get(user=user)
+        x.total_score += round_score
+        x.save()
+
