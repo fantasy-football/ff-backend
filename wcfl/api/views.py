@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Player, Fixture, Squad, Transfer
+from .models import Player, Fixture, Squad, Transfer, PlayerStat
 from common.models import User
 
 import json
@@ -14,19 +14,19 @@ def players_list(request):
             data = []
 
             for player in players:
-                data.append({'id': player.id, 'name': player.name,
-                             'position': player.position,
-                             'value': player.value,
-                             'points': player.points,
-                             'trigram': player.team.trigram,
-                             'teamId': player.team.id
-                             })
+                if player.team.prequarter_finalist:
+                    player_stat = PlayerStat.objects.get(player=player)
+                    data.append({'id': player.id, 'name': player.name,
+                                 'position': player.position,
+                                 'value': player.value,
+                                 'points': player_stat.total_points,
+                                 'trigram': player.team.trigram,
+                                 'teamId': player.team.id
+                                })
 
             return JsonResponse({'data': data})
 
         except Exception as e:
-            # To be changed during deployment.
-            print(e)
             return JsonResponse({'Error': 'Could not fetch players'},
                                  status=500)
 
