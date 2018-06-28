@@ -330,6 +330,37 @@ class Squad(models.Model):
         return data
 
 
+    @classmethod
+    def compute_value(cls, user):
+            
+        squad_value = 0
+
+        squad = cls.objects.get(user=user)
+
+        vcInSub = False
+        capSub = False
+        
+        for player in squad.substitutes.all():
+            if player.name == squad.captain.name:
+                capSub = True
+            if player.name == squad.vice_captain.name:
+                vcInSub = True
+    
+        if not capSub:
+           squad_value += squad.captain.value
+
+        if not vcInSub:
+           squad_value += squad.vice_captain.value
+
+        for player in squad.starting.all():
+            squad_value += player.value
+
+        for player in squad.substitutes.all():
+            squad_value += player.value
+      
+        return squad_value
+
+           
 class Fixture(models.Model):
     
     id = models.AutoField(primary_key=True)
