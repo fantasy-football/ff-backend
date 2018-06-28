@@ -18,6 +18,13 @@ class User(models.Model):
         ordering = ['-score']
         verbose_name_plural = 'Users'
 
+    @classmethod
+    def reset_squad(cls, user_id):
+        x = cls.objects.get(id=user_id)
+        x.squad_created = False
+        x.current_round += 1
+        x.save()
+
 
 class UserStat(models.Model):
     user = models.OneToOneField('User', on_delete=models.CASCADE,
