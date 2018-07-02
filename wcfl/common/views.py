@@ -99,7 +99,8 @@ def get_ranklist(request):
             data = []
             users = User.objects.all()
             for rank, user in enumerate(users):
-                data.append({'rank': rank+1,
+                data.append({'id': user.id,
+                             'rank': rank+1,
                              'name': user.name,
                              'pic': user.profile_picture,
                              'score': user.score
