@@ -124,6 +124,7 @@ def get_lineup(request):
 
 @csrf_exempt
 def submit_transfer(request):
+    
     if request.method == 'POST':
         
         try:
@@ -155,6 +156,32 @@ def submit_transfer(request):
         sq = Transfer.create(user_id, starting_list, substitute_list, captain_id, vc_id)
 
         return JsonResponse({'Succes': True})
+    
+    else:
+        return JsonResponse({'Error': 'Invalid request'}, status=405)
+
+
+@csrf_exempt
+def opponent_lineup(request):
+    
+    if request.method == 'POST':
+
+        try:
+            data = json.loads(request.body.decode('utf8'))
+            user_id = data['id']
+            user = User.objects.get(id = user_id)
+
+            if user.squad_created == False:
+                return JsonResponse({'Error': 'Squad not yet created'}, status=403)
+
+            squad = Squad.objects.get(user = user_id)
+
+            data = squad.get_data()
+            return JsonResponse({'data': data})
+
+        except Exception as e:
+            return JsonResponse({'Error': 'Something bad happened'}, status=500)
+
     else:
         return JsonResponse({'Error': 'Invalid request'}, status=405)
 

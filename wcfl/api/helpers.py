@@ -37,7 +37,7 @@ def update_score():
     squads = Squad.objects.all()
     for squad in squads:
         user = User.objects.get(id=squad.user_id)
-        user_stat = UserStat.objects.get(user=user.id)
+        user_stat, created = UserStat.objects.get_or_create(user=user)
         user.score = user_stat.total_score + squad.compute_score()
         user.save()
 

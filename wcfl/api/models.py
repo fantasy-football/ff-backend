@@ -272,62 +272,68 @@ class Squad(models.Model):
                 vcInSub = True
                 
         if capSub == False:
+            player_stat = PlayerStat.objects.get(player=self.captain)
             data.append({'name': self.captain.name, 'position': self.captain.position,
-                         'points': 3*self.captain.points, 'isCaptain': True,
+                         'points': 3 * player_stat.total_points, 'isCaptain': True,
                          'trigram': self.captain.team.trigram, 'value': self.captain.value,
 			 'isSub': False, 'id': self.captain.id
                         })
         
         if vcInSub == False:
+            player_stat = PlayerStat.objects.get(player=self.vice_captain)
             data.append({'name': self.vice_captain.name, 'position': self.vice_captain.position,
-                         'points': 2*self.vice_captain.points, 'isVC': True,
+                         'points': 2 * player_stat.total_points, 'isVC': True,
                          'trigram': self.vice_captain.team.trigram,
 			 'isSub': False, 'id': self.vice_captain.id
                         })
 
 
         for index, player in enumerate(self.starting.all()):
+            player_stat = PlayerStat.objects.get(player=player)
             data.append({'name': player.name, 
                          'position': player.position,
-                         'points': player.points,
+                         'points': player_stat.total_points,
                          'trigram': player.team.trigram,
 			 'isSub': False,
-			 'id': self.player.id,
-			 'value': self.player.value, 
+			 'id': player.id,
+			 'value': player.value, 
                          })
        
         
 
         for index, player in enumerate(self.substitutes.all()):
+            player_stat = PlayerStat.objects.get(player=self.captain)
             if player.name == self.captain.name:
                 data.append({'name': player.name, 
                              'position': player.position,
-                             'points': (3*player.points)//2,
+                             'points': (3 * player_stat.total_points)//2,
                              'trigram': player.team.trigram,
-			     'value': self.player.value,
-			     'id': self.player.id,
+			     'value': player.value,
+			     'id': player.id,
                              'isSub': True
                             })
 
             elif player.name == self.vice_captain.name: 
                 data.append({'name': player.name, 
                              'position': player.position,
-                             'points': (player.points)//2,
+                             'points': player_stat.total_points,
                              'trigram': player.team.trigram,
-			     'value': self.player.value,
-			     'id': self.player.id,
+			     'value': player.value,
+			     'id': player.id,
                              'isSub': True
                             })
             
             else:
                 data.append({'name': player.name, 
                              'position': player.position,
-                             'points': (player.points)//2,
+                             'points': (player_stat.total_points)//2,
                              'trigram': player.team.trigram,
                              'isSub': True
                             })        
         
-        return data
+        squad_data = [{self.user.email: data}]
+        
+        return squad_data
 
 
     @classmethod
