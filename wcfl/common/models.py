@@ -47,8 +47,8 @@ class UserStat(models.Model):
         x.save()
 
     @classmethod
-    def update(cls, user, round_score):
+    def update(cls, user):
         x = cls.objects.get(user=user)
-        x.total_score += round_score
+        x.total_score = user.score
         x.save()
 

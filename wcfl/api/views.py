@@ -14,7 +14,7 @@ def players_list(request):
             data = []
 
             for player in players:
-                if player.team.prequarter_finalist:
+                if player.team.quarter_finalist:
                     player_stat = PlayerStat.objects.get(player=player)
                     data.append({'id': player.id, 'name': player.name,
                                  'position': player.position,

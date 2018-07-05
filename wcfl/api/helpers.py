@@ -62,7 +62,7 @@ def print_r16():
             print(team.id, team.name)
 
 
-def update_player_value():
+def update_player_value_preqf():
     players = Player.objects.all()
     for player in players:
         if player.team.prequarter_finalist:
@@ -157,3 +157,100 @@ def reset_all_squads():
     users = User.objects.all()
     for user in users:
         User.reset_squad(user.id)
+
+
+def qf(qualified_teams):
+    for team_id in qualified_teams:
+        team = Team.objects.get(id=team_id)
+        team.quarter_finalist = True
+        team.save()
+
+
+def print_qf():
+    teams = Team.objects.all()
+    for team in teams:
+        if team.quarter_finalist:
+            print(team.id, team.name)
+
+
+def print_qf_players():
+    players = Player.objects.all()
+    for player in players:
+        if player.team.quarter_finalist:
+            print(player.id, player.name, player.value)
+
+
+def update_player_value():
+    players = Player.objects.all()
+    for player in players:
+        if player.team.quarter_finalist:
+            
+            if player.value >= 10:
+                
+                if player.points >= 15:
+                    player.value += 1.5
+                
+                elif player.points >= 12:
+                    player.value += 1 
+                
+                elif player.points >= 8:
+                    player.value += 0.5
+
+                elif player.points >= 5:
+                    player.value -= 0.5
+
+                elif player.points >= 3:
+                    player.value -= 1
+
+                else: 
+                    player.value -= 2
+            
+            elif player.value >= 7:
+ 
+                if player.points >= 15:
+                    player.value += 2.5
+                
+                elif player.points >= 12:
+                    player.value += 2
+                
+                elif player.points >= 10:
+                    player.value += 1.5
+
+                elif player.points >= 8:
+                    player.value += 1
+
+                elif player.points >= 5:
+                    player.value += 0.5
+
+                elif player.points >= 3:
+                    player.value -= 0.5
+
+                else: 
+                    player.value -= 1
+
+            else:
+ 
+                if player.points >= 15:
+                    player.value += 4
+                
+                elif player.points >= 12:
+                    player.value += 3 
+                
+                elif player.points >= 10:
+                    player.value += 2
+
+                elif player.points >= 8:
+                    player.value += 1.5
+
+                elif player.points >= 6:
+                    player.value += 1
+
+                elif player.points >= 4: 
+                    player.value += 0.5
+
+                else:
+                    player.value -= 0.5
+           
+            player.save()
+
+
