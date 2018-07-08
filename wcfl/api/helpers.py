@@ -180,10 +180,32 @@ def print_qf_players():
             print(player.id, player.name, player.value)
 
 
+def sf(qualified_teams):
+    for team_id in qualified_teams:
+        team = Team.objects.get(id=team_id)
+        team.semi_finalist = True
+        team.save()
+
+
+def print_sf():
+    teams = Team.objects.all()
+    for team in teams:
+        if team.semi_finalist:
+            print(team.id, team.name)
+
+
+def print_sf_players():
+    players = Player.objects.all()
+    for player in players:
+        if player.team.semi_finalist:
+            print(player.id, player.name, player.value)
+
+
+
 def update_player_value():
     players = Player.objects.all()
     for player in players:
-        if player.team.quarter_finalist:
+        if player.team.semi_finalist:
             
             if player.value >= 10:
                 
