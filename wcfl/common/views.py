@@ -69,7 +69,7 @@ def sign_out(request):
     else:
         return JsonResponse({'Error': 'Invalid Request'}, status=405)
 
-
+@set_cookies
 def get_user_details(request):
     if request.method == 'GET':
         try:

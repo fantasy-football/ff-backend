@@ -48,7 +48,7 @@ class UserStat(models.Model):
 
     @classmethod
     def update(cls, user):
-        x = cls.objects.get(user=user)
+        x, created = cls.objects.get_or_create(user=user)
         x.total_score = user.score
         x.save()
 

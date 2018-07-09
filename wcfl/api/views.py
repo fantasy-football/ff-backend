@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import Player, Fixture, Squad, Transfer, PlayerStat
 from common.models import User
+from common.decorators import set_cookies
 
 import json
 
@@ -14,7 +15,7 @@ def players_list(request):
             data = []
 
             for player in players:
-                if player.team.quarter_finalist:
+                if player.team.semi_finalist:
                     player_stat = PlayerStat.objects.get(player=player)
                     data.append({'id': player.id, 'name': player.name,
                                  'position': player.position,
@@ -60,7 +61,7 @@ def fixtures_list(request):
         return JsonResponse({'Error': 'Invalid request'}, status=405)
 
 
-@csrf_exempt
+@set_cookies
 def submit_squad(request):
     if request.method == 'POST':
         
@@ -122,7 +123,7 @@ def get_lineup(request):
         return JsonResponse({'Error': 'Invalid request'}, status=405)
 
 
-@csrf_exempt
+@set_cookies
 def submit_transfer(request):
     
     if request.method == 'POST':
@@ -161,7 +162,7 @@ def submit_transfer(request):
         return JsonResponse({'Error': 'Invalid request'}, status=405)
 
 
-@csrf_exempt
+@set_cookies
 def opponent_lineup(request):
     
     if request.method == 'POST':
