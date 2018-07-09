@@ -151,7 +151,9 @@ SESSION_REDIS = {
 
 # CORS settings
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+   'wcfl.excelmec.org'
+)
 
 CORS_ALLOW_CREDENTIALS = True
 
